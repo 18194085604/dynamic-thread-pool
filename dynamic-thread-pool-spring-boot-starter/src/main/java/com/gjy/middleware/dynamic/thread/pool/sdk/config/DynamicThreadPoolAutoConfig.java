@@ -1,6 +1,7 @@
 package com.gjy.middleware.dynamic.thread.pool.sdk.config;
 
 import com.alibaba.fastjson2.JSON;
+import com.gjy.middleware.dynamic.thread.pool.sdk.domain.DynamicThreadPoolService;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +20,7 @@ public class DynamicThreadPoolAutoConfig {
     private String applicationName;
 
     @Bean("dynamicThreadPollService")
-    public String dynamicThreadPollService(ApplicationContext applicationContext, Map<String, ThreadPoolExecutor> threadPoolExecutorMap) {
+    public DynamicThreadPoolService dynamicThreadPollService(ApplicationContext applicationContext, Map<String, ThreadPoolExecutor> threadPoolExecutorMap) {
         applicationName = applicationContext.getEnvironment().getProperty("spring.application.name");
 
         if (StringUtils.isBlank(applicationName)) {
@@ -30,7 +31,7 @@ public class DynamicThreadPoolAutoConfig {
         logger.info("线程池信息:{}", JSON.toJSONString(threadPoolExecutorMap.keySet()));
 
 
-        return new String("1231");
+        return new DynamicThreadPoolService(threadPoolExecutorMap,applicationName);
     }
 
 
