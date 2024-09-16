@@ -3,11 +3,15 @@ package com.gjy.middleware.dynamic.thread.pool.sdk.config;
 import com.alibaba.fastjson2.JSON;
 import com.gjy.middleware.dynamic.thread.pool.sdk.domain.DynamicThreadPoolService;
 import com.gjy.middleware.dynamic.thread.pool.sdk.domain.IDynamicThreadPoolService;
+import com.gjy.middleware.dynamic.thread.pool.sdk.domain.model.entity.ThreadPoolConfigEntity;
+import com.gjy.middleware.dynamic.thread.pool.sdk.domain.model.valobj.RegistryEnumVO;
 import com.gjy.middleware.dynamic.thread.pool.sdk.registry.IRegistry;
 import com.gjy.middleware.dynamic.thread.pool.sdk.registry.redis.RedisRegistry;
 import com.gjy.middleware.dynamic.thread.pool.sdk.trigger.job.ThreadPoolDataReportJob;
+import com.gjy.middleware.dynamic.thread.pool.sdk.trigger.listener.ThreadPoolConfigAdjustListener;
 import org.apache.commons.lang.StringUtils;
 import org.redisson.Redisson;
+import org.redisson.api.RTopic;
 import org.redisson.api.RedissonClient;
 import org.redisson.codec.JsonJacksonCodec;
 import org.redisson.config.Config;
@@ -77,12 +81,23 @@ public class DynamicThreadPoolAutoConfig {
         return new RedisRegistry(dynamicThreadRedissonClient);
     }
 
-
+    @Bean
+    public ThreadPoolConfigAdjustListener threadPoolConfigAdjustListener(IDynamicThreadPoolService dynamicThreadPoolService, IRegistry registry) {
+        return new ThreadPoolConfigAdjustListener(dynamicThreadPoolService, registry);
+    }
 
 
     @Bean
     public ThreadPoolDataReportJob threadPoolDataReportJob(IDynamicThreadPoolService dynamicThreadPoolService, IRegistry registry) {
         return new ThreadPoolDataReportJob(registry,dynamicThreadPoolService);
+    }
+
+
+    @Bean(name = "dynamicThreadPoolRedisTopic")
+    public RTopic threadPoolConfigAdjustListener(RedissonClient redissonClient, ThreadPoolConfigAdjustListener threadPoolConfigAdjustListener) {
+        RTopic topic = redissonClient.getTopic(RegistryEnumVO.DYNAMIC_THREAD_POOL_REDIS_TOPIC.getKey() + "_" + applicationName);
+        topic.addListener(ThreadPoolConfigEntity.class, threadPoolConfigAdjustListener);
+        return topic;
     }
 
 }
